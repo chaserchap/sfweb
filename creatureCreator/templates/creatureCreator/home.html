@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Creature Creator</h2>
+
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-xs-4">
+			<br />
+			<h4>Choose an array and CR</h4>
+			<br />
+			<form method="POST" action="{% url 'home' %}" name="arrayForm">
+				{% csrf_token %}
+
+				{{ form }}
+
+				<button type="button" id="uploadButton" class="btn btn-primary" autocomplete="off" style="margin: auto 20%; ">Update Creature</button>
+			</form>
+		</div>
+	</div>
+</div>
+
+{% endblock %}

@@ -314,11 +314,12 @@ class Creature(models.Model):
     reflex = models.IntegerField(default=0)
     will = models.IntegerField(default=0)
     name = models.CharField(max_length=50)
-    array = models.ManyToManyField(Array)
+    array = models.ForeignKey(Array,
+                              null=True)
     creature_class = models.ForeignKey(ClassGraft,
                                        null=True)
     creature_template = models.ForeignKey(Template,
-                                       null=True)
+                                          null=True)
     special_abilities = models.ManyToManyField(SpecialAbilities)
     skills = models.ManyToManyField(Skills)
     spells = models.ManyToManyField(Spells)
