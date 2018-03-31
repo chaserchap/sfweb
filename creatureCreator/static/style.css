@@ -1,8 +1,14 @@
+.display-6 {
+	font-size: 1.5rem;
+	font-weight: 300;
+	line-height: 1.2;
+	margin-top: 20px;
+}
+
 .display-5 {
 	font-size: 2.5rem;
 	font-weight: 300;
 	line-height: 1.2;
-	margin-top: 19px;
 }
 
 .col-wrap {
@@ -15,4 +21,28 @@
 .section-header	{
 	color:#003399;
 	border-bottom: solid;
+}
+
+h1 {
+	color: #003399;
+}
+
+h2 {
+	color: #003399;
+}
+
+h3 {
+	color: #003399;
+}
+
+h4 {
+	color: #003399;
+}
+
+h5 {
+	color: #003399;
+}
+
+.display-3 {
+	color: #003399;
 }

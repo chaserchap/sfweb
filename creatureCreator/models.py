@@ -314,6 +314,12 @@ class Creature(models.Model):
     reflex = models.IntegerField(default=0)
     will = models.IntegerField(default=0)
     name = models.CharField(max_length=50)
+    strength = models.IntegerField(default=10)
+    dexterity = models.IntegerField(default=10)
+    constitution = models.IntegerField(default=10)
+    intelligence = models.IntegerField(default=10)
+    wisdom = models.IntegerField(default=10)
+    charisma = models.IntegerField(default=10)
     array = models.ForeignKey(Array,
                               null=True)
     creature_class = models.ForeignKey(ClassGraft,
