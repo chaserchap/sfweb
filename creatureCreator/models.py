@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.contrib.postgres.fields import JSONField
 from django.core import validators
 from django.db import models
 
@@ -50,13 +51,20 @@ class Array(models.Model):
     will = models.IntegerField()
     hp = models.IntegerField()
     ability_dc = models.IntegerField()
-    spell_dc_base = models.IntegerField()
-    ability_score_modifiers = models.CharField(
-        max_length=20,
-        validators=[validators.int_list_validator(allow_negative=True)])
+    base_spell_dc = models.IntegerField()
+    high_ability_mod = models.IntegerField()
+    med_ability_mod = models.IntegerField()
+    low_ability_mod = models.IntegerField()
     special_abilities_count = models.IntegerField()
     master_skills_modifier = models.IntegerField()
     good_skills_modifier = models.IntegerField()
+    high_attack_bonus = models.IntegerField()
+    low_attack_bonus = models.IntegerField()
+    ranged_energy_attack = models.CharField(max_length=15)
+    ranged_kinetic_attack = models.CharField(max_length=15)
+    standard_melee_attack = models.CharField(max_length=15)
+    three_melee_attack = models.CharField(max_length=15)
+    four_melee_attack = models.CharField(max_length=15)
 
 
 class CreatureTypeGraft(models.Model):
@@ -131,6 +139,7 @@ class AbilitiesByCR(models.Model):
 class Skills(models.Model):
     skill_title = models.CharField(max_length=20)
     skill_description = models.TextField()
+    skill_modifier = models.IntegerField(default=5)
 
 
 class ClassGraft(models.Model):
@@ -200,13 +209,36 @@ class SpecialAbilities(models.Model):
         ('FTS', 'Feats'),
         ('FRE', 'Free'),
         ('ADJ', 'Adjustment'))
+    TYPES = (
+        ('ARA', 'Aura'),
+        ('OFF', 'Offensive Ability'),
+        ('DEF', 'Defensive Ability'),
+        ('SNS', 'Sense'),
+        ('IMM', 'Immunities'),
+        ('OTH', 'Other'))
+    ORIGIN = (
+        ('EX', 'Ex'),
+        ('SU', 'Su'),
+        ('SP', 'Sp'))
 
-    # Will probably require many more columns
+    # Need to track origin (Ex, Su, and the other one)
+
+    # Will probably require MANY more columns
     title = models.CharField(max_length=50)
-    description = models.TextField()
+    subtype = models.CharField(max_length=20,
+                               null=True)
+    ability_range = models.CharField(max_length=20,
+                                     null=True)
+    ability_type = models.CharField(max_length=3,
+                                    choices=TYPES)
+    description = models.TextField(null=True)
     source = models.CharField(
         max_length=3,
-        choices=SOURCES)
+        choices=SOURCES,
+        null=True)
+    origin = models.CharField(
+        max_length=2,
+        choices=ORIGIN)
 
 
 class Spells(models.Model):
@@ -229,9 +261,14 @@ class Spells(models.Model):
 
 class Senses(models.Model):
     title = models.CharField(max_length=50)
-    subtype = models.CharField(max_length=50)
+    subtype = models.CharField(max_length=50, null=True)
     description = models.TextField()
     sense_range = models.IntegerField()
+
+
+class Immunities(models.Model):
+    title = models.CharField(max_length=15)
+    description = models.TextField()
 
 
 class Aura(models.Model):
@@ -239,6 +276,29 @@ class Aura(models.Model):
     effect = models.TextField()
     aura_range = models.IntegerField()
     DC = models.IntegerField()
+
+
+class Speed(models.Model):
+    title = models.CharField(max_length=20)
+    distance = models.IntegerField(default=30)
+
+
+class Attack(models.Model):
+    ATTACKS = (('M', 'Melee'),
+               ('R', 'Ranged'))
+    title = models.CharField(max_length=20)
+    # Need a validator for dice attacks
+    damage = models.CharField(max_length=20)
+    add_damage = models.IntegerField()
+    damage_type = models.CharField(max_length=20)
+    mod = models.IntegerField()
+    critical = models.CharField(max_length=20)
+    three_attack = models.BooleanField(default=False)
+    four_attack = models.BooleanField(default=False)
+    against_eac = models.BooleanField(default=False)
+    attack_type = models.CharField(max_length=1,
+                                   choices=ATTACKS)
+    additional_info = models.TextField(null=True)
 
 
 class Creature(models.Model):
@@ -287,6 +347,12 @@ class Creature(models.Model):
              ('H', 'Huge'),
              ('G', 'Gargantuan'),
              ('C', 'Colossal'))
+    ABILITIES = (('STR', 'Strength'),
+                 ('DEX', 'Dexterity'),
+                 ('CON', 'Constitution'),
+                 ('INT', 'Intelligence'),
+                 ('WIS', 'Wisdom'),
+                 ('CHA', 'Charisma'))
     cr = models.CharField(max_length=5,
                           choices=CR,
                           default='1')
@@ -304,22 +370,44 @@ class Creature(models.Model):
     creature_subtype = models.ForeignKey(CreatureSubtypeGraft,
                                          null=True)
     initiative = models.IntegerField(default=0)
-    senses = models.ManyToManyField(Senses)
-    aura = models.ManyToManyField(Aura)
     hp = models.IntegerField(default=0)
     rp = models.IntegerField(default=0)
     eac = models.IntegerField(default=0)
     kac = models.IntegerField(default=0)
+    perception = models.IntegerField(default=0)
     fortitude = models.IntegerField(default=0)
     reflex = models.IntegerField(default=0)
     will = models.IntegerField(default=0)
-    name = models.CharField(max_length=50)
-    strength = models.IntegerField(default=10)
-    dexterity = models.IntegerField(default=10)
-    constitution = models.IntegerField(default=10)
-    intelligence = models.IntegerField(default=10)
-    wisdom = models.IntegerField(default=10)
+    ability_dc = models.IntegerField(default=0)
+    base_spell_dc = models.IntegerField(default=0)
+    name = models.CharField(max_length=50, default="Creature Name")
+    high_ability = models.CharField(max_length=3,
+                                    choices=ABILITIES,
+                                    null=True,
+                                    default=True)
+    med_ability = models.CharField(max_length=3,
+                                   choices=ABILITIES,
+                                   null=True,
+                                   default=True)
+    low_ability = models.CharField(max_length=3,
+                                   choices=ABILITIES,
+                                   null=True,
+                                   default=True)
+    strength = models.IntegerField(default=0)
+    dexterity = models.IntegerField(default=0)
+    constitution = models.IntegerField(default=0)
+    intelligence = models.IntegerField(default=0)
+    wisdom = models.IntegerField(default=0)
+    space = models.CharField(max_length=5,
+                             default=5)
+    reach = models.CharField(max_length=5,
+                             default=5)
     charisma = models.IntegerField(default=10)
+    attack = models.ManyToManyField(Attack,
+                                    null=True)
+    speed = models.IntegerField(default=20)
+    special_movement = models.ManyToManyField(Speed,
+                                              null=True)
     array = models.ForeignKey(Array,
                               null=True)
     creature_class = models.ForeignKey(ClassGraft,
@@ -328,4 +416,62 @@ class Creature(models.Model):
                                           null=True)
     special_abilities = models.ManyToManyField(SpecialAbilities)
     skills = models.ManyToManyField(Skills)
+    language = models.CharField(max_length=100,
+                                default='Common')
     spells = models.ManyToManyField(Spells)
+    environment = models.TextField(null=True)
+    organization = models.TextField(null=True)
+    # Need 'Resistance', 'Weaknesses', 'Spell Resistance (SR)', and a way to do Spell-like abilities.
+
+    def calculate(self):
+        if self.array():
+            self.eac = self.array.eac
+            self.kac = self.array.kac
+            self.fortitude = self.array.fort
+            self.reflex = self.array.ref
+            self.will = self.array.will
+            self.hp = self.array.hp
+            self.ability_dc = self.array.ability_dc
+            self.base_spell_dc = self.array.base_spell_dc
+            self.strength = 0
+            self.dexterity = 0
+            self.constitution = 0
+            self.intelligence = 0
+            self.wisdom = 0
+            self.charisma = 0
+            if self.high_ability == 'STR':
+                self.strength += self.array.high_ability_mod
+            elif self.high_ability == 'DEX':
+                self.dexterity += self.array.high_ability_mod
+            elif self.high_ability == 'CON':
+                self.constitution += self.array.high_ability_mod
+            elif self.high_ability == 'INT':
+                self.intelligence += self.array.high_ability_mod
+            elif self.high_ability == 'WIS':
+                self.wisdom += self.array.high_ability_mod
+            elif self.high_ability == 'CHA':
+                self.charisma += self.array.high_ability_mod
+            if self.med_ability == 'STR':
+                self.strength += self.array.med_ability_mod
+            elif self.med_ability == 'DEX':
+                self.dexterity += self.array.med_ability_mod
+            elif self.med_ability == 'CON':
+                self.constitution += self.array.med_ability_mod
+            elif self.med_ability == 'INT':
+                self.intelligence += self.array.med_ability_mod
+            elif self.med_ability == 'WIS':
+                self.wisdom += self.array.med_ability_mod
+            elif self.med_ability == 'CHA':
+                self.charisma += self.array.med_ability_mod
+            if self.low_ability == 'STR':
+                self.strength += self.array.low_ability_mod
+            elif self.low_ability == 'DEX':
+                self.dexterity += self.array.low_ability_mod
+            elif self.low_ability == 'CON':
+                self.constitution += self.array.low_ability_mod
+            elif self.low_ability == 'INT':
+                self.intelligence += self.array.low_ability_mod
+            elif self.low_ability == 'WIS':
+                self.wisdom += self.array.low_ability_mod
+            elif self.low_ability == 'CHA':
+                self.charisma += self.array.low_ability_mod

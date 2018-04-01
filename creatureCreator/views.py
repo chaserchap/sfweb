@@ -13,15 +13,17 @@ def creatureCreator(request):
     if request.method == 'POST':
         form = NameForm(request.POST)
         if form.is_valid():
-            creature = Creature()
+            creature = Creature.objects.get(id=request.session['creature'])
             creature.name = request.POST['name']
             creature.save()
-            request.session['creature'] = creature.id
             return redirect('array')
     else:
         form = NameForm()
+        creature = Creature()
+        creature.save()
+        request.session['creature'] = creature.id
     return render(request, 'creatureCreator/creatureCreator.html',
-                  {'form': form})
+                  {'form': form, 'creature': creature})
 
 
 def array(request):

@@ -1,26 +1,14 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  <link rel="stylesheet" href="test.css">
-
 <body>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col">
-            <img src="https://image.ibb.co/jWLd4n/starfinder_logo.png" class="mx-auto d-block" alt="starfinder logo" border="0" />
-        </div>
-    </div>
-</div>
-
-<div class="container-fluid">
+<div class="container-fluid pt-2">
     <div class="row no-gutters">
         <div class="col-md-6">
-            <p class="section-header display-4"><b>Creature Name</b></p>
+            <p class="section-header display-5"><b>{{ creature.name }}</b></p>
         </div>
         <div class="col-md-6">
-            <p class="text-right section-header display-5"><b>CR</b> 4 <b>XP</b> 200</p>
+            <p class="text-right section-header display-6"><b>CR</b> {{ creature.cr }} <b>XP</b> {{creature.xp}}</p>
         </div>
     </div>
     <div class="row">
@@ -28,8 +16,8 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col">
-                        <div class="pb-0">N Large Plant</div>
-                        <div class="pb-2"><b>Init: </b>1; <b>Senses: </b>blindsense (scent) 30 ft., low-light vision; <b>Perception: </b>+10</div>
+                        <div class="pb-0">{{ creature.alignment }} {{ creature.size }} {{ creature.creature_type }} {{ creature.creature_subtype }}</div>
+                        <div class="pb-2"><b>Init: </b>{{ creature.initiative }}; <b>Senses: </b>{% for sense in creature.special_abilities.all %}{% if sense.ability_type == 'SNS' %}{{ sense.title }} {% if sense.subtype %}({{sense.subtype}}){% endif %} {{sense.ability_range}} ft.;{% endif %}{% endfor %} <b>Perception: </b>{{ creature.perception }}</div>
                     </div>
                 </div>
             </div>
@@ -39,14 +27,14 @@
                         <p class="section-header"><b>DEFENSE</b></p>
                     </div>
                     <div class="col col-md-6 pb-0">
-                        <p class="section-header" class="text-right"><b>HP: </b>52 <b>RP: </b>3</p>
+                        <p class="section-header" class="text-right"><b>HP: </b>{{ creature.hp }} <b>RP: </b>{{ creature.rp }}</p>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="pb-0"><b>EAC: </b>16; <b>KAC: </b>18;</div>
-                        <div class="pb-0"><b>Fort </b>+8; <b>Ref </b>+6; <b>Will </b>+3;</div>
-                        <div class="pb-2"><b>Defensive Abilities </b>fast healing 2; <b>Immunities </b>plant immunities;</div>
+                        <div class="pb-0"><b>EAC: </b>{{ creature.eac }}; <b>KAC: </b>{{ creature.kac }};</div>
+                        <div class="pb-0"><b>Fort </b>+{{ creature.fortitude }}; <b>Ref </b>+{{ creature.reflex }}; <b>Will </b>+{{ creature.will }};</div>
+                        <div class="pb-2"><b>Defensive Abilities </b>{% for ability in creature.defensive_abilities.all %}{% if ability.ability_type == 'DEF' %}{{ability.title}}; {% endif %}{% endfor %} <b>Immunities </b>{% for ability in creature.special_abilities.all %}{% if ability.type == 'IMM' %}{{ ability.title }}; {% endif %}{% endfor %}</div>
                     </div>
                 </div>
                 <div class="row no-gutters pt-2 pb-0">
@@ -56,11 +44,11 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="pb-0"><b>Speed </b>40 ft., climb 40 ft.;</div>
-                        <div class="pb-0"><b>Melee </b>tentacles +12 (1d6+9 B plus ingested adaptation)</div>
-                        <div class="pb-0"><b>Ranged </b>acid spit +9 (1d4+4 A) or thorn dart +9 (1d6+4 P plus carrion spores)</div>
-                        <div class="pb-0"><b>Space </b>10 ft.; <b>Reach </b>10 ft.</div>
-                        <div class="pb-2"><b>Offensive Abilities </b>ingested adaptations</div>
+                        <div class="pb-0"><b>Speed </b>{{ creature.speed }} ft.; {% for speed in creature.special_movement.all %}{{ speed.title }} {{ speed.distance }} ft.;{% endfor %}</div>
+                        <div class="pb-0"><b>Melee</b>{% for attack in creature.melee_attack %}{% if attack.attack_type == 'M' %} {{ attack.title }} +{{ attack.mod }} ({{ attack.damage }}+{{ attack.damage_mod }} {{ attack.damage_type }}{% if attack.additional_info %} plus {{ attack.additional_info }}{% endif %});{% endfor %}</div>
+                        <div class="pb-0"><b>Ranged </b>{% for attack in creature.melee_attack %}{% if attack.attack_type == 'R' %} {{ attack.title }} +{{ attack.mod }} ({{ attack.damage }}+{{ attack.damage_mod }} {{ attack.damage_type }}{% if attack.additional_info %} plus {{ attack.additional_info }}{% endif %});{% endfor %}</div>
+                        <div class="pb-0"><b>Space </b>{{ creature.speed }} ft.; <b>Reach </b>{{ creature.reach }} ft.</div>
+                        <div class="pb-2"><b>Offensive Abilities </b>{% for ability in creature.special_abilities.all %}{% if ability.ability_type == 'OFF' %}{{ability.title}}; {% endif %}{% endfor %}</div>
                     </div>
                 </div>
                 <div class="row no-gutters pt-2 pb-0">
@@ -70,21 +58,26 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="pb-0"><b>Str </b>+5; <b>Dex </b>+1; <b>Con </b>+4; <b>Int </b>-1; <b>Wis </b>+3; <b>Cha </b>-1</div>
-                        <div class="pb-2"><b>Skills </b>Acrobatics +10, Athletics +15, Survival +10</div>
+                        <div class="pb-0"><b>Str </b>{% if creature.strength >= 0 %}+{% else %}-{% endif %}{{ creature.strength }}; <b>Dex </b>{% if creature.dexterity >= 0 %}+{% else %}-{% endif %}{{ creature.dexterity }}; <b>Con </b>{% if creature.constitution >= 0 %}+{% else %}-{% endif %}{{ creature.constitution }}; <b>Int </b>{% if creature.intelligence >= 0 %}+{% else %}-{% endif %}{{ creature.intelligence }}; <b>Wis </b>{% if creature.wisdom >= 0 %}+{% else %}-{% endif %}{{ creature.wisdom }}; <b>Cha </b>{% if creature.charisma >= 0 %}+{% else %}-{% endif %}{{ creature.charisma }}</div>
+                        <div class="pb-0"><b>Skills </b>{% for skill in creature.skills.all %}{{ skill.title }} {% if skill.modifier >= 0 %}+{% else %}-{% endif %}{{ skill.modifier }}; {% endfor %}</div>
+                        {% if creature.language %}<div class="pb-0"><b>Languages </b>{{ creature.language }}</div>{% endif %}
+                        <div class="pb-0"><b>Other abilities </b>{% for ability in creature.special_abilities.all %}{% if ability.type == 'OTH' %}{{ ability.title }}; {% endif %}{% endfor %}
                     </div>
                 </div>
-                <div class="row no-gutters pt-2 pb-0">
+            {% if creature.environment or creature.organization %}
+                <div class="row no-gutters pt-4 pb-0">
                     <div class="col">
                         <p class="section-header"><b>ECOLOGY</b></p>
+                        }
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="pb-0"><b>Environment </b>temperate or warm forests (Castrovel)</div>
-                        <div class="pb-2"><b>Organization </b>solitary, pack (2–5), or infestation (6–11)</div>
+                        <div class="pb-0"><b>Environment </b>{{ creature.environment }}</div>
+                        <div class="pb-2"><b>Organization </b>{{ creature.organization }}</div>
                     </div>
                 </div>
+            {% endif %}
                 <div class="row no-gutters pt-2 pb-0">
                     <div class="col">
                         <p class="section-header"><b>SPECIAL ABILITIES</b></p>
@@ -92,7 +85,7 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="pb-0"><b>Acid Spit (Ex) </b>Once every 1d4 rounds as a standard action, a ksarik can spit a glob of acid at a target within 60 feet.</div>
+                        <div class="pb-0">{% for ability in creature.special_abilities.all %}{% if ability.type == 'OTH' %}<b>{{ ability.title }} ({{ ability.origin }}) </b>{{ ability.description }}{% endif %}{% endfor %}</div>
                     </div>
                 </div>
             </div>
